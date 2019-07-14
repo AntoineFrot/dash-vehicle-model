@@ -25,43 +25,11 @@ class LiveData:
         self.states = []
         self.running = True
 
-    # def append(self, t, x_pos, y_pos, steering_angle, x_vel, yaw_angle, steering_angle_vel, x_acc):
-    #     self.t.append(t)
-    #     self.x_pos.append(x_pos)
-    #     self.y_pos.append(y_pos)
-    #     self.steering_angle.append(steering_angle)
-    #     self.x_vel.append(x_vel)
-    #     self.yaw_angle.append(yaw_angle)
-    #     self.steering_angle_vel.append(steering_angle_vel)
-    #     self.x_acc.append(x_acc)
-    #     if len(self.t) > MAX_LEN_DATA:
-    #         self.t = self.t[-MAX_LEN_DATA:]
-    #         self.x_pos = self.x_pos[-MAX_LEN_DATA:]
-    #         self.y_pos = self.y_pos[-MAX_LEN_DATA:]
-    #         self.steering_angle = self.steering_angle[-MAX_LEN_DATA:]
-    #         self.x_vel = self.x_vel[-MAX_LEN_DATA:]
-    #         self.yaw_angle = self.yaw_angle[-MAX_LEN_DATA:]
-    #         self.steering_angle_vel = self.steering_angle_vel[-MAX_LEN_DATA:]
-    #         self.x_acc = self.x_acc[-MAX_LEN_DATA:]
-
-    # def thread_func_random(self, thread_name, delay):
-    #     while self.running:
-    #         try:
-    #             t_new = self.t[-1]+.1
-    #         except:
-    #             t_new = 0.0
-    #         self.append(t_new, random.randint(0, 100))
-    #         time.sleep(delay)
-
     def get_last(self):
         try:
             return self.states[-1]
         except:
             return None
-
-    # def get_columns(self):
-    #     print(self.states)
-    #     return []#[[state.t for state in self.states]]
 
     def thread_func_zmq(self, thread_name, delay):
 
@@ -89,7 +57,6 @@ live_data = LiveData()
 live_data.start_thread()
 
 app = dash.Dash()
-# app.config['suppress_callback_exceptions']=True
 
 df = pd.DataFrame({'name': ['t', 'x_vel'], 'value': [0, 0]})
 
@@ -115,7 +82,6 @@ app.layout = html.Div(
                             placeholder="Enter a value...",
                             type="number",
                             value=5,
-                            # debounce=True,
                             min=3,
                             max=999,
                         ),
@@ -171,7 +137,6 @@ def update_graph(n_interval):
                                        xaxis={'title': x_attr},
                                        yaxis={'title': y_attr},
                                        margin={'l': 60, 'b': 40, 't': 10, 'r': 10},
-                                       # legend={'x': 'x', 'y': 'y'},
                                        hovermode='closest'
                                    )},
                            style={'height': '200px'}), style={"border": "1px black solid"}) for
