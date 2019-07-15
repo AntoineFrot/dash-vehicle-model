@@ -14,7 +14,13 @@ import struct
 import time
 import _thread
 
+from math import pi, radians, degrees
+
 from cstate import CState
+
+T_STEP = 0.01
+MAX_STEERING_ANGLE_VELOCITY_S = 90.0  # °/s
+MAX_STEERING_ANGLE_VELOCITY_STEP = MAX_STEERING_ANGLE_VELOCITY_S * T_STEP
 
 port = "5556"
 
@@ -57,7 +63,7 @@ class UserEntries:
     def __init__(self):
         self.running = True
         self.x_acc = 0.0
-        self.steering_angle_vel = 0.0
+        self.steering_angle_target = 0.0
 
     def thread_func_zmq(self, thread_name, delay):
 
@@ -72,8 +78,8 @@ class UserEntries:
 
         while self.running:
             msg = socket.recv()
-            self.steering_angle_vel, self.x_acc = struct.unpack('dd', msg)
-            print('New values: steering_angle_vel {} x_acc {}'.format(self.steering_angle_vel, self.x_acc))
+            self.steering_angle_target, self.x_acc = struct.unpack('dd', msg)
+            print('New values: steering_angle_target {} x_acc {}'.format(self.steering_angle_target, self.x_acc))
             # time.sleep(.1)
 
     def start_thread(self):
@@ -93,18 +99,31 @@ t_last = 0.0
 count = 0
 
 while True:
-    t_next = t_last + .01
+    t_next = t_last + T_STEP
     t = numpy.array((t_last, t_next))
     t_last = t_next
 
-    KS = KS = init_KS(state_crt.arr_all_no_t())
+    KS = init_KS(state_crt.arr_all_no_t())
 
-    u_goal = [user_entries.steering_angle_vel, user_entries.x_acc]
+    steering_angle_vel = 0
+    if user_entries.steering_angle_target >= state_crt.steering_angle + MAX_STEERING_ANGLE_VELOCITY_STEP:
+        steering_angle_vel = MAX_STEERING_ANGLE_VELOCITY_STEP
+    elif user_entries.steering_angle_target > state_crt.steering_angle:
+        steering_angle_vel = (user_entries.steering_angle_target - state_crt.steering_angle)/T_STEP
+    elif user_entries.steering_angle_target <= state_crt.steering_angle - MAX_STEERING_ANGLE_VELOCITY_STEP:
+        steering_angle_vel = -MAX_STEERING_ANGLE_VELOCITY_STEP
+    elif user_entries.steering_angle_target < state_crt.steering_angle:
+        steering_angle_vel = (user_entries.steering_angle_target - state_crt.steering_angle)/T_STEP
+
+    if steering_angle_vel != 0:
+        print(steering_angle_vel, state_crt.steering_angle)
+
+    u_goal = [steering_angle_vel, user_entries.x_acc]
 
     out = odeint(func_KS, KS, t, args=(u_goal, p))
 
     out_right = out[-1]
-    state_crt = CState(t_next, out_right[0], out_right[1], out_right[2], out_right[3], out_right[4])
+    state_crt = CState(t_next, out_right[0], out_right[1], out_right[2], out_right[3], out_right[4], steering_angle_vel, user_entries.x_acc)
 
     count += 1
     if count == 10:

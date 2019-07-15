@@ -65,8 +65,8 @@ class ZmqSender(object):
 
 class MyDashVehicleModel(object):
     def __init__(self):
-        self.last_x_acc = 0.0
-        self.last_steering_angle_vel = 0.0
+        self.last_x_accel = 0.0
+        self.last_steering_angle = 0.0
 
         self.live_data = LiveData()
         self.live_data.start_thread()
@@ -92,7 +92,7 @@ class MyDashVehicleModel(object):
                     html.Div([
                         html.Div(["x-acceleration"]),
                         dcc.Input(
-                            id="x-acc-input-numeric",
+                            id="x-accel-input-numeric",
                             placeholder="Enter a new acceleration in m/s2...",
                             type="number",
                             value=0,
@@ -100,7 +100,7 @@ class MyDashVehicleModel(object):
                             max=9,
                         ),
                         dcc.Slider(
-                            id="x-acc-input-slider",
+                            id="x-accel-input-slider",
                             # tooltip="Enter a new acceleration in m/s2...",
                             min=-9,
                             max=9,
@@ -109,20 +109,20 @@ class MyDashVehicleModel(object):
                         ),
                         html.Div(id="num_out0"),
                         html.Div(id="num_out1"),
-                        html.Div(["steering-angle-velocity"]),
+                        html.Div(["steering-angle-target"]),
                         dcc.Input(
-                            id="steering-angle-vel-input-numeric",
+                            id="steering-angle-target-input-numeric",
                             type="number",
                             value=0,
                             min=0,
-                            max=9,
+                            max=30,
                         ),
                         dcc.Slider(
-                            id="steering-angle-vel-input-slider",
-                            min=-90,
-                            max=90,
-                            step=1.0,
-                            value=0.0,
+                            id="steering-angle-target-input-slider",
+                            min=-30,
+                            max=30,
+                            step=1,
+                            value=0,
                         ),
                         html.Div(id="num_out2"),
                         html.Div(id="num_out3")
@@ -150,33 +150,33 @@ class MyDashVehicleModel(object):
 
         @self.app.callback(
             dash.dependencies.Output(component_id='num_out0', component_property='children'),
-            [dash.dependencies.Input('x-acc-input-numeric', 'value')])
+            [dash.dependencies.Input('x-accel-input-numeric', 'value')])
         def update_output(value):
-            self.last_x_acc = value
+            self.last_x_accel = value
             self.zmq_send()
             # return value
 
         @self.app.callback(
             dash.dependencies.Output(component_id='num_out1', component_property='children'),
-            [dash.dependencies.Input('x-acc-input-slider', 'value')])
+            [dash.dependencies.Input('x-accel-input-slider', 'value')])
         def update_output(value):
-            self.last_x_acc = value
+            self.last_x_accel = value
             self.zmq_send()
 
 
         @self.app.callback(
             dash.dependencies.Output(component_id='num_out2', component_property='children'),
-            [dash.dependencies.Input('steering-angle-vel-input-numeric', 'value')])
+            [dash.dependencies.Input('steering-angle-target-input-numeric', 'value')])
         def update_output(value):
-            self.last_steering_angle_vel = float(value)/100.0
+            self.last_steering_angle = value
             self.zmq_send()
 
 
         @self.app.callback(
             dash.dependencies.Output(component_id='num_out3', component_property='children'),
-            [dash.dependencies.Input('steering-angle-vel-input-slider', 'value')])
+            [dash.dependencies.Input('steering-angle-target-input-slider', 'value')])
         def update_output(value):
-            self.last_steering_angle_vel = float(value)/100.0
+            self.last_steering_angle = value
             self.zmq_send()
 
 
@@ -227,7 +227,7 @@ class MyDashVehicleModel(object):
 
     def zmq_send(self):
         # print('The value is {}.'.format(value))
-        self.zmq_sender.socket.send(struct.pack('dd', self.last_steering_angle_vel, self.last_x_acc))
+        self.zmq_sender.socket.send(struct.pack('dd', self.last_steering_angle, self.last_x_accel))
 
 if __name__ == '__main__':
     my_dash_vehicle_model = MyDashVehicleModel()
