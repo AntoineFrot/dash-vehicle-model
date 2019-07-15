@@ -168,7 +168,7 @@ class MyDashVehicleModel(object):
             dash.dependencies.Output(component_id='num_out2', component_property='children'),
             [dash.dependencies.Input('steering-angle-vel-input-numeric', 'value')])
         def update_output(value):
-            self.last_steering_angle_vel = value
+            self.last_steering_angle_vel = float(value)/100.0
             self.zmq_send()
 
 
@@ -176,7 +176,7 @@ class MyDashVehicleModel(object):
             dash.dependencies.Output(component_id='num_out3', component_property='children'),
             [dash.dependencies.Input('steering-angle-vel-input-slider', 'value')])
         def update_output(value):
-            self.last_steering_angle_vel = value
+            self.last_steering_angle_vel = float(value)/100.0
             self.zmq_send()
 
 

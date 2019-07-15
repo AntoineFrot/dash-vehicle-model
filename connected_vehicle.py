@@ -1,3 +1,7 @@
+import os
+import sys
+sys.path.append(os.getcwd()+r'/commonroad-vehicle-models/Python')
+
 from parameters_vehicle2 import parameters_vehicle2
 from init_KS import init_KS
 from vehicleDynamics_KS import vehicleDynamics_KS
@@ -95,7 +99,7 @@ while True:
 
     KS = KS = init_KS(state_crt.arr_all_no_t())
 
-    u_goal = [-user_entries.steering_angle_vel, user_entries.x_acc]
+    u_goal = [user_entries.steering_angle_vel, user_entries.x_acc]
 
     out = odeint(func_KS, KS, t, args=(u_goal, p))
 
