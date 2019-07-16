@@ -16,8 +16,10 @@ import pandas as pd
 
 from cstate import CState
 
-MAX_LEN_DATA = 500
+MAX_LEN_DATA = 50
 REFRESH_PERIOD_MS = 300
+
+STATE_UNITS = CState('s', 'm', 'm', '°', 'km/h', '°', '°/s', 'm/s2')
 
 
 class LiveData:
@@ -74,7 +76,7 @@ class MyDashVehicleModel(object):
 
         self.app = dash.Dash()
 
-        df = pd.DataFrame({'name': ['t', 'x_vel'], 'value': [0, 0]})
+        df = pd.DataFrame({'name': ['t', 'x_vel'], 'value': [0, 0], 'unit': ['', '']})
 
         self.app.layout = html.Div(
             [
@@ -195,7 +197,8 @@ class MyDashVehicleModel(object):
             if last_state is not None:
                 table_names = list(CState().__dict__.keys())
                 table_values = ['{:.01f}'.format(getattr(last_state, k)) for k in table_names]
-                dff = pd.DataFrame({'name': table_names, 'value': table_values})
+                table_units = [getattr(STATE_UNITS, k) for k in table_names]
+                dff = pd.DataFrame({'name': table_names, 'value': table_values, 'unit': table_units})
             else:
                 dff = pd.DataFrame()
 
@@ -213,7 +216,7 @@ class MyDashVehicleModel(object):
                 graph_id, (x_attr, y_attr) in enumerate([('x_pos', 'y_pos'),
                                                          ('t', 'x_vel'),
                                                          ('t', 'steering_angle'),
-                                                         ('t', 'yaw_angle')])
+                                                         ('t', 'heading')])
             ]
 
             return dff.to_dict('records'), graphs

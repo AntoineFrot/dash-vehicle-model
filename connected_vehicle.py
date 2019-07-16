@@ -14,6 +14,7 @@ import struct
 import time
 import _thread
 
+from copy import deepcopy
 from math import radians, degrees
 
 from cstate import CState
@@ -22,7 +23,7 @@ T_STEP = 0.01
 MAX_STEERING_ANGLE = 15.0  # °
 MAX_STEERING_ANGLE_RAD = radians(MAX_STEERING_ANGLE)
 
-MAX_STEERING_ANGLE_VELOCITY_S = 45.0  # °/s
+MAX_STEERING_ANGLE_VELOCITY_S = 180.0  # °/s
 MAX_STEERING_ANGLE_STEP_RAD = radians(MAX_STEERING_ANGLE_VELOCITY_S * T_STEP)
 
 port = "5556"
@@ -48,7 +49,7 @@ g = 9.81  # [m/s^2]
 # x2 = y-position in a global coordinate system
 # x3 = steering angle of front wheels
 # x4 = velocity in x-direction
-# x5 = yaw angle
+# x5 = yaw angle (heading?)
 
 # u1 = steering angle velocity of front wheels
 # u2 = longitudinal acceleration
@@ -132,11 +133,27 @@ while True:
     out = odeint(func_KS, KS, t, args=(u_goal, p))
 
     out_right = out[-1]
-    state_crt = CState(t_next, out_right[0], out_right[1], out_right[2], out_right[3], out_right[4], degrees(steering_angle_vel), user_entries.x_acc)
+    state_crt = CState(t_next,
+                       out_right[0],
+                       out_right[1],
+                       out_right[2],
+                       out_right[3],
+                       out_right[4],
+                       steering_angle_vel,
+                       user_entries.x_acc)
 
     count += 1
     if count == 10:
-        socket.send_pyobj(state_crt)
+        state_display = deepcopy(state_crt)
+        state_display.x_vel = state_display.x_vel * 3.6
+        state_display.heading = degrees(state_display.heading)
+        while state_display.heading < 0:
+            state_display.heading += 360
+        while state_display.heading > 360:
+            state_display.heading -= 360
+        state_display.steering_angle = degrees(state_display.steering_angle)
+        state_display.steering_angle_vel = degrees(state_display.steering_angle_vel)
+        socket.send_pyobj(state_display)
         count = 0
 
     time.sleep(.01)
